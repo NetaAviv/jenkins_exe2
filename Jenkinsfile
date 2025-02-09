@@ -38,13 +38,14 @@ pipeline {
         }
     }
 
-        stage('Deploy') {
-            steps {
-                script {
-                    sh 'docker tag $IMAGE_NAME $REGISTRY/$IMAGE_NAME:latest'
-                    sh 'docker push $REGISTRY/$IMAGE_NAME:latest' // פריסה לרג'יסטרי
-                }
+    stage('Deploy') {
+        steps {
+            script {
+                sh 'docker tag my-app netaaviv/jenkins_exe_2:latest'
+                sh 'docker push netaaviv/jenkins_exe_2:latest'
             }
         }
+    }
+
     }
 }
