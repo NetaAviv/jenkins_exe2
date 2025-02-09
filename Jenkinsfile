@@ -20,16 +20,23 @@ pipeline {
             }
         }
 
-        stage('Test') {
-            steps {
-                script {
-                    sh 'docker run --name $CONTAINER_NAME -d $IMAGE_NAME' // הרצת הקונטיינר
-                    sh 'sleep 10' // זמן להעלאת הקונטיינר
-                    sh 'docker ps | grep $CONTAINER_NAME' // בדיקת יציבות
-                    sh 'docker stop $CONTAINER_NAME && docker rm $CONTAINER_NAME' // ניקוי קונטיינר
-                }
+    stage('Test') {
+        steps {
+            script {
+                sh '''
+                    docker stop my-app-container || true
+                    docker rm my-app-container || true
+                    docker run --name my-app-container -d my-app
+                    sleep 10
+                    if ! docker ps | grep -q my-app-container; then
+                        echo "Container failed to start"
+                        docker logs my-app-container
+                        exit 1
+                    fi
+                '''
             }
         }
+    }
 
         stage('Deploy') {
             steps {
