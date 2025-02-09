@@ -2,34 +2,31 @@ pipeline {
     agent any
 
     environment {
-        IMAGE_NAME = "my-docker-app"
-        CONTAINER_NAME = "my-docker-container"
+        IMAGE_NAME = 'my-app'
+        CONTAINER_NAME = 'my-app-container'
+        REGISTRY = 'my-docker-registry.com'
+    }
+
+    triggers {
+        pollSCM('* * * * *') // מריץ את הפייפליין בכל push ל-repo
     }
 
     stages {
-        stage('Build Docker Image') {
+        stage('Build') {
             steps {
                 script {
-                    sh "docker build -t ${IMAGE_NAME} ."
+                    sh 'docker build -t $IMAGE_NAME .' // בניית התמונה
                 }
             }
         }
 
-        stage('Run Container for Testing') {
+        stage('Test') {
             steps {
                 script {
-                    // Stop and remove any existing container
-                    sh "docker stop ${CONTAINER_NAME} || true"
-                    sh "docker rm ${CONTAINER_NAME} || true"
-
-                    // Run a new container
-                    sh "docker run -d --name ${CONTAINER_NAME} ${IMAGE_NAME}"
-                    
-                    // Wait a bit for the container to initialize
-                    sh "sleep 5"
-
-                    // Check if the container is running
-                    sh "docker ps | grep ${CONTAINER_NAME}"
+                    sh 'docker run --name $CONTAINER_NAME -d $IMAGE_NAME' // הרצת הקונטיינר
+                    sh 'sleep 10' // זמן להעלאת הקונטיינר
+                    sh 'docker ps | grep $CONTAINER_NAME' // בדיקת יציבות
+                    sh 'docker stop $CONTAINER_NAME && docker rm $CONTAINER_NAME' // ניקוי קונטיינר
                 }
             }
         }
@@ -37,22 +34,10 @@ pipeline {
         stage('Deploy') {
             steps {
                 script {
-                    echo "Deploying container..."
-                    // Add deployment steps if needed
+                    sh 'docker tag $IMAGE_NAME $REGISTRY/$IMAGE_NAME:latest'
+                    sh 'docker push $REGISTRY/$IMAGE_NAME:latest' // פריסה לרג'יסטרי
                 }
             }
-        }
-    }
-
-    post {
-        failure {
-            echo 'Pipeline failed!'
-            sh "docker logs ${CONTAINER_NAME} || true"
-        }
-        always {
-            echo 'Cleaning up...'
-            sh "docker stop ${CONTAINER_NAME} || true"
-            sh "docker rm ${CONTAINER_NAME} || true"
         }
     }
 }
