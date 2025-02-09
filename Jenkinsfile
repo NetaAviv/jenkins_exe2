@@ -4,7 +4,6 @@ pipeline {
     environment {
         IMAGE_NAME = 'my-app'
         CONTAINER_NAME = 'my-app-container'
-        REGISTRY = 'my-docker-registry.com'
     }
 
     triggers {
